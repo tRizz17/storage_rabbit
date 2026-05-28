@@ -2,7 +2,8 @@ const amqp = require('amqplib');
 const rabbitmqHost = process.env.RABBITMQ_HOST || 'localhost';
 const rabbitmqUrl = `amqp://${rabbitmqHost}`;
 const { ObjectId, GridFSBucket } = require('mongodb')
-const { connectToDb } = require('../lib/mongo')
+const { connectToDb, getDbReference } = require('../lib/mongo')
+const { buffer } = require('node:stream/consumers')
 const { Jimp } = require("jimp");
 const { getPhotoById } = require('../models/photo');
 
@@ -15,11 +16,13 @@ async function main() {
         channel.consume('thumbnail-maker', async (msg) => {
             // msg can be null if something goes awry
             if (msg) {
+                
                 const image = await getPhotoById(msg.content.toString());
-                const jimp_image = await Jimp.read(image.filename)
-                jimp_image.resize(100, 100)
-                const thumbnail = await image.write(`${image.filename}tb`);
-                console.log(thumbnail)
+                const db = getDbReference()
+                const bucket = new GridFSBucket(db, { bucketName: 'images' });
+                const buf = await buffer(bucket.openDownloadStreamByName(image.filename))
+                const jimg = await Jimp.fromBuffer(buf)
+                console.log(jimg._exif.imageSize)
             }
 
             // Tell RabbitMQ it's OK to remove this message from the queue
