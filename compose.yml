@@ -46,6 +46,7 @@ services:
     volumes:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
+      - /usr/src/app/.git
     command: npx nodemon consumer/consumer.js
 
   api:
@@ -69,4 +70,5 @@ services:
     volumes:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
+      - /usr/src/app/.git
     command: npm run dev
