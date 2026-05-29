@@ -262,7 +262,7 @@ request() {
     local expected_code="$default_expected_code"
 
     local json_test_flag methodarg contentarg payloadarg verbose
-    local autharg
+    local autharg formarg
 
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -284,6 +284,10 @@ request() {
                 ;;
             -p|--payload)
                 payload="$2"
+                shift
+                ;;
+            -f|--form)
+                formarg="$formarg -F '$(printf "%s" "$2" | sed "s/'/'\\\\''/g")'"
                 shift
                 ;;
             --expect*-code)
@@ -316,7 +320,7 @@ request() {
     fi
 
     if [ -z "$method" ]; then
-        if [ -z "$payload" ]; then
+        if [ -z "$payload" ] && [ -z "$formarg" ]; then
             method="GET"
         else
             method="POST"
@@ -341,8 +345,10 @@ request() {
 
     case "$method" in
         POST|PUT|PATCH|DELETE)
-            contentarg="-H 'Content-Type: $content_type'"
-            payloadarg="-d '$payload_escaped'"
+            if [ -z "$formarg" ]; then
+                contentarg="-H 'Content-Type: $content_type'"
+                payloadarg="-d '$payload_escaped'"
+            fi
             ;;
     esac
 
@@ -362,7 +368,7 @@ request() {
         autharg="-H 'Authorization: Bearer ${token}'"
     fi
 
-    cmd="curl -s $autharg $methodarg $contentarg $payloadarg '$url' -o '$tempfile' -w '%{http_code}'"
+    cmd="curl -s $autharg $methodarg $contentarg $payloadarg $formarg '$url' -o '$tempfile' -w '%{http_code}'"
     #echo ==============================
     #echo $cmd
     #echo ==============================
