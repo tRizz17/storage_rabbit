@@ -26,7 +26,8 @@ async function insertNewPhoto(image) {
     const bucket = new GridFSBucket(db, { bucketName: 'images' });
     const metadata = {
       contentType: image.contentType,
-      businessId: image.businessId
+      businessId: image.businessId,
+      thumbId: image.thumbId
     };
     const uploadStream = bucket.openUploadStream(
       image.filename,

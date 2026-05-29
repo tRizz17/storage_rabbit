@@ -44,7 +44,6 @@ const upload = multer({
 router.post('/', upload.single('image'), async (req, res) => {
   if (validateAgainstSchema(req.body, PhotoSchema) && req.file) {
     try {
-      console.log(req.file)
       const image = {
         contentType: req.file.mimetype,
         filename: req.file.filename,
@@ -90,9 +89,11 @@ router.get('/:id', async (req, res, next) => {
     if (image) {
       const responseBody = {
         _id: image._id,
-        url: `/media/photos/${image.filename}`,
+        url: `/media/photos/${image._id}.${imageTypes[image.metadata.contentType]}`,
+        thumbUrl: `/media/thumbs/${image._id}.${imageTypes[image.metadata.contentType]}`,
         contentType: image.metadata.contentType,
         businessId: image.metadata.businessId,
+        thumbId: image.metadata.thumbId
       };
       res.status(200).send(responseBody)
     } else {

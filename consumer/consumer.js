@@ -29,14 +29,16 @@ async function main() {
                 );
                 uploadStream
                     .end(thumbBuf)
-                    .on('finish', () => {
-                        console.log(uploadStream.id)
-                        const photoCollection = db.collection('')
+                    .on('finish', async () => {
+                        const imageCollection = db.collection('images.files')
+                        await imageCollection.updateOne(
+                            { _id: image._id },
+                            { $set: { 'metadata.thumbId': uploadStream.id } }
+                        );
                     })
                     .on('error', err => {
                         console.error(err)
                     })
-
             }
 
             // Tell RabbitMQ it's OK to remove this message from the queue
