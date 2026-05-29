@@ -17,7 +17,7 @@ default_base_url="http://localhost:$PORT"
 
 status "Testing Photos"
 
-image="./test.png"   # a real image you've added to the project
+image="./test.png"
 businessId="123"
 
 request "/photos" \
@@ -28,5 +28,29 @@ request "/photos" \
     --expect-code 201 \
     --expect-response '{"id":"[ANY]","links":{"photo":"[REGEX]/photos/.*","business":"[REGEX]/businesses/.*"}}'
 
+photoId=$(extract_field id)
 
+request "/photos/$photoId" \
+    -l "Getting photo by id with $photoId" \
+    --expect-code 200 \
+    --expect-response '{
+        "_id": "'$photoId'", 
+        "url": "/media/photos/'$photoId'",
+        "thumbUrl": "/media/thumbs/'$photoId'",
+        "contentType": "image/png",
+        "businessId": "'$businessId'",
+        "thumbId": "[ANY]"
+    }'
+
+url=$(extract_field url)
+thumbUrl=$(extract_field thumbUrl)
+
+request "$url" \
+    -l "Testing the url for /media/photos/:id" \
+    --expect-code 200 \
+
+sleep 5 # Give the consumer a bit of time before the request
+request "$thumbUrl" \
+    -l "Testing the url for /media/thumbs/:id" \
+    --expect-code 200 \
 
