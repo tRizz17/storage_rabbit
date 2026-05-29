@@ -12,6 +12,7 @@ const fs = require('node:fs');
 const PhotoSchema = {
   businessId: { required: true },
   caption: { required: false },
+  thumbId: { required: false}
 }
 exports.PhotoSchema = PhotoSchema
 

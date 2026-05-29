@@ -16,13 +16,27 @@ async function main() {
         channel.consume('thumbnail-maker', async (msg) => {
             // msg can be null if something goes awry
             if (msg) {
-                
+
                 const image = await getPhotoById(msg.content.toString());
                 const db = getDbReference()
                 const bucket = new GridFSBucket(db, { bucketName: 'images' });
                 const buf = await buffer(bucket.openDownloadStreamByName(image.filename))
                 const jimg = await Jimp.fromBuffer(buf)
-                console.log(jimg._exif.imageSize)
+                const thumbBuf = await jimg.resize({ w: 100, h: 100 }).getBuffer("image/jpeg")
+                const thumbsBucket = new GridFSBucket(db, { bucketName: 'thumbs' });
+                const uploadStream = thumbsBucket.openUploadStream(
+                    image.filename,
+                );
+                uploadStream
+                    .end(thumbBuf)
+                    .on('finish', () => {
+                        console.log(uploadStream.id)
+                        const photoCollection = db.collection('')
+                    })
+                    .on('error', err => {
+                        console.error(err)
+                    })
+
             }
 
             // Tell RabbitMQ it's OK to remove this message from the queue
